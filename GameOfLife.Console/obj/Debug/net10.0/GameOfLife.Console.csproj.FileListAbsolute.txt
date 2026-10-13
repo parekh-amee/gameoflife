@@ -1,0 +1,16 @@
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\bin\Debug\net10.0\GameOfLife.Console.exe
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\bin\Debug\net10.0\GameOfLife.Console.deps.json
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\bin\Debug\net10.0\GameOfLife.Console.runtimeconfig.json
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\bin\Debug\net10.0\GameOfLife.Console.dll
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\bin\Debug\net10.0\GameOfLife.Console.pdb
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.AssemblyInfoInputs.cache
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.AssemblyInfo.cs
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.csproj.CoreCompileInputs.cache
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.sourcelink.json
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.dll
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\refint\GameOfLife.Console.dll
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.pdb
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLife.Console.genruntimeconfig.cache
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\ref\GameOfLife.Console.dll
+C:\Users\ami.dipakbhai.parekh\source\repos\gameoflife\GameOfLife.Console\obj\Debug\net10.0\GameOfLi.B1647A9C.Up2Date
