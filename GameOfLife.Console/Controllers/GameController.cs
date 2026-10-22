@@ -42,6 +42,7 @@ public sealed class GameController
             Console.SetCursorPosition(0, 0);
             while (true)
             {
+                Console.Clear();
                 Console.SetCursorPosition(0, 0);
 
                 _view.DisplayBoard(board, generation);

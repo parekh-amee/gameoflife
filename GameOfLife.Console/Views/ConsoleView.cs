@@ -68,7 +68,7 @@ public sealed class ConsoleView
 
         frame.AppendLine(GameTexts.Title);
         frame.AppendLine($"{GameTexts.GenerationPrefix}{generation}");
-        frame.AppendLine();
+        
 
         for (int row = 0; row < board.Rows; row++)
         {
@@ -83,7 +83,7 @@ public sealed class ConsoleView
             frame.AppendLine();
         }
 
-        frame.AppendLine();
+        
         frame.AppendLine(GameTexts.AliveLegend);
         frame.AppendLine(GameTexts.QuitPrompt);
 
