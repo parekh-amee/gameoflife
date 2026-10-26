@@ -30,7 +30,7 @@ public sealed class ConsoleView
             settings.LargeBoardSize));
 
         menu.AppendLine(string.Format(
-            GameTexts.CustomBoard,
+            GameTexts.CustomBoardFormat,
             GameTexts.CustomBoardChoice));
 
         Console.Write(menu.ToString());
@@ -38,12 +38,22 @@ public sealed class ConsoleView
 
     public string? ReadMenuChoice() => Console.ReadLine();
 
+    public bool ConfirmRestoreSavedGame()
+    {
+        Console.Write(GameTexts.RestorePrompt);
+        string? answer = Console.ReadLine();
+
+        return string.Equals(
+            answer?.Trim(),
+            "Y",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
     public int ReadDimension(string prompt, GameSettings settings)
     {
         while (true)
         {
             Console.WriteLine(prompt);
-
             string? input = Console.ReadLine();
 
             if (int.TryParse(input, out int value) &&
@@ -67,8 +77,13 @@ public sealed class ConsoleView
         StringBuilder frame = new();
 
         frame.AppendLine(GameTexts.Title);
-        frame.AppendLine($"{GameTexts.GenerationPrefix}{generation}");
-        
+        frame.AppendLine(
+            $"{GameTexts.GenerationPrefix}{generation}");
+
+        frame.AppendLine(
+            $"{GameTexts.LiveCellsPrefix}{board.CountLiveCells()}");
+
+        frame.AppendLine();
 
         for (int row = 0; row < board.Rows; row++)
         {
@@ -83,15 +98,12 @@ public sealed class ConsoleView
             frame.AppendLine();
         }
 
-        
         frame.AppendLine(GameTexts.AliveLegend);
+        frame.AppendLine(GameTexts.SavePrompt);
         frame.AppendLine(GameTexts.QuitPrompt);
 
         Console.Write(frame.ToString());
     }
-
-
-
 
     public void DisplayMessage(string message) =>
         Console.WriteLine(message);
