@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GameOfLife.Console")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d06a7bdafc55a0b55f26d7f39349aac740352563")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+afbfb97d645fb4d0c26232ecb1f672d7bb743607")]
 [assembly: System.Reflection.AssemblyProductAttribute("GameOfLife.Console")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GameOfLife.Console")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

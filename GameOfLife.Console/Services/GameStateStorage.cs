@@ -111,27 +111,12 @@ public sealed class GameStateStorage
 
     private bool IsValidSaveData(GameSaveData? data)
     {
-        if (data is null)
-        {
-            return false;
-        }
-
-        if (data.Rows <= 0 || data.Columns <= 0)
-        {
-            return false;
-        }
-
-        if (data.Generation < 0)
-        {
-            return false;
-        }
-
-        if (data.Cells is null)
-        {
-            return false;
-        }
-
-        if (data.Cells.Length != data.Rows)
+        if (data is null ||
+            data.Rows <= 0 ||
+            data.Columns <= 0 ||
+            data.Generation < 0 ||
+            data.Cells is null ||
+            data.Cells.Length != data.Rows)
         {
             return false;
         }
