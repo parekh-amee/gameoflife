@@ -34,17 +34,21 @@ public sealed class GameController
 
         GameSaveData? savedGame = _storage.Load();
 
-        if (savedGame is not null && _view.ConfirmRestoreSavedGame())
+        if (savedGame is not null &&
+            _view.ConfirmRestoreSavedGame())
         {
             board = RestoreBoard(savedGame);
             generation = savedGame.Generation;
         }
         else
         {
-            (int Rows, int Columns) dimensions = SelectBoardDimensions();
+            (int Rows, int Columns) dimensions =
+                SelectBoardDimensions();
 
             if (dimensions.Rows == 0)
+            {
                 return;
+            }
 
             board = _boardFactory.CreateRandomBoard(
                 dimensions.Rows,
@@ -53,54 +57,43 @@ public sealed class GameController
             generation = 0;
         }
 
-        bool alternateScreenEnabled = false;
+        _storage.Save(board, generation);
 
-        try
+        while (true)
         {
-            Console.Write(GameTexts.EnterAlternateScreen);
-            alternateScreenEnabled = true;
-            Console.CursorVisible = false;
+            Console.Clear();
+
+            _view.DisplayBoard(board, generation);
+
+            if (HandleInput(board, generation))
+            {
+                break;
+            }
+
+            if (WaitForNextGeneration(board, generation))
+            {
+                break;
+            }
+
+            board = _engine.NextGeneration(board);
+            generation++;
 
             _storage.Save(board, generation);
-
-            while (true)
-            {
-                Console.Clear();
-                _view.DisplayBoard(board, generation);
-
-                if (HandleInput(board, generation))
-                    break;
-
-                Thread.Sleep(_settings.UpdateIntervalMilliseconds);
-
-                if (HandleInput(board, generation))
-                    break;
-
-                board = _engine.NextGeneration(board);
-                generation++;
-
-                // Keep the most recent generation available for restoration.
-                _storage.Save(board, generation);
-            }
-        }
-        finally
-        {
-            Console.CursorVisible = true;
-
-            if (alternateScreenEnabled)
-                Console.Write(GameTexts.ExitAlternateScreen);
         }
 
         _view.DisplayMessage(GameTexts.QuitMessage);
     }
 
-    private bool HandleInput(GameBoard board, int generation)
+    private bool HandleInput(
+        GameBoard board,
+        int generation)
     {
         try
         {
             while (Console.KeyAvailable)
             {
-                ConsoleKey key = Console.ReadKey(intercept: true).Key;
+                ConsoleKey key =
+                    Console.ReadKey(intercept: true).Key;
 
                 if (key == ConsoleKey.Q)
                 {
@@ -108,9 +101,14 @@ public sealed class GameController
                     return true;
                 }
 
-                if (key == ConsoleKey.S)
+                if (key == ConsoleKey.P)
                 {
-                    bool saved = _storage.Save(board, generation);
+                    PauseGame(board, generation);
+                }
+                else if (key == ConsoleKey.S)
+                {
+                    bool saved =
+                        _storage.Save(board, generation);
 
                     _view.DisplayMessage(
                         saved
@@ -121,7 +119,69 @@ public sealed class GameController
         }
         catch (InvalidOperationException)
         {
-            return false;
+            // Console input is unavailable.
+        }
+
+        return false;
+    }
+
+    private void PauseGame(
+        GameBoard board,
+        int generation)
+    {
+        _view.DisplayMessage(GameTexts.PausedMessage);
+
+        while (true)
+        {
+            ConsoleKey key =
+                Console.ReadKey(intercept: true).Key;
+
+            if (key == ConsoleKey.P)
+            {
+                _view.DisplayMessage(
+                    GameTexts.ResumedMessage);
+
+                return;
+            }
+
+            if (key == ConsoleKey.S)
+            {
+                bool saved =
+                    _storage.Save(board, generation);
+
+                _view.DisplayMessage(
+                    saved
+                        ? GameTexts.SaveSuccess
+                        : GameTexts.SaveFailure);
+            }
+
+            if (key == ConsoleKey.Q)
+            {
+                _storage.Save(board, generation);
+                Environment.Exit(0);
+            }
+        }
+    }
+
+    private bool WaitForNextGeneration(
+        GameBoard board,
+        int generation)
+    {
+        const int inputCheckInterval = 50;
+
+        int elapsedMilliseconds = 0;
+
+        while (elapsedMilliseconds <
+               _settings.UpdateIntervalMilliseconds)
+        {
+            Thread.Sleep(inputCheckInterval);
+
+            elapsedMilliseconds += inputCheckInterval;
+
+            if (HandleInput(board, generation))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -129,11 +189,15 @@ public sealed class GameController
 
     private GameBoard RestoreBoard(GameSaveData data)
     {
-        GameBoard board = new(data.Rows, data.Columns);
+        GameBoard board = new(
+            data.Rows,
+            data.Columns);
 
         for (int row = 0; row < data.Rows; row++)
         {
-            for (int column = 0; column < data.Columns; column++)
+            for (int column = 0;
+                 column < data.Columns;
+                 column++)
             {
                 board.SetCell(
                     row,
@@ -145,11 +209,13 @@ public sealed class GameController
         return board;
     }
 
-    private (int Rows, int Columns) SelectBoardDimensions()
+    private (int Rows, int Columns)
+        SelectBoardDimensions()
     {
         _view.DisplayMenu(_settings);
 
-        string? choice = _view.ReadMenuChoice()?.Trim();
+        string? choice =
+            _view.ReadMenuChoice()?.Trim();
 
         switch (choice)
         {
@@ -180,7 +246,9 @@ public sealed class GameController
                 return (rows, columns);
 
             default:
-                _view.DisplayMessage(GameTexts.InvalidChoice);
+                _view.DisplayMessage(
+                    GameTexts.InvalidChoice);
+
                 return (0, 0);
         }
     }

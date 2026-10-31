@@ -36,11 +36,15 @@ public sealed class ConsoleView
         Console.Write(menu.ToString());
     }
 
-    public string? ReadMenuChoice() => Console.ReadLine();
+    public string? ReadMenuChoice()
+    {
+        return Console.ReadLine();
+    }
 
     public bool ConfirmRestoreSavedGame()
     {
         Console.Write(GameTexts.RestorePrompt);
+
         string? answer = Console.ReadLine();
 
         return string.Equals(
@@ -49,11 +53,14 @@ public sealed class ConsoleView
             StringComparison.OrdinalIgnoreCase);
     }
 
-    public int ReadDimension(string prompt, GameSettings settings)
+    public int ReadDimension(
+        string prompt,
+        GameSettings settings)
     {
         while (true)
         {
             Console.WriteLine(prompt);
+
             string? input = Console.ReadLine();
 
             if (int.TryParse(input, out int value) &&
@@ -72,11 +79,14 @@ public sealed class ConsoleView
         }
     }
 
-    public void DisplayBoard(GameBoard board, int generation)
+    public void DisplayBoard(
+        GameBoard board,
+        int generation)
     {
         StringBuilder frame = new();
 
         frame.AppendLine(GameTexts.Title);
+
         frame.AppendLine(
             $"{GameTexts.GenerationPrefix}{generation}");
 
@@ -87,7 +97,9 @@ public sealed class ConsoleView
 
         for (int row = 0; row < board.Rows; row++)
         {
-            for (int column = 0; column < board.Columns; column++)
+            for (int column = 0;
+                 column < board.Columns;
+                 column++)
             {
                 frame.Append(
                     board.IsAlive(row, column)
@@ -99,12 +111,15 @@ public sealed class ConsoleView
         }
 
         frame.AppendLine(GameTexts.AliveLegend);
+        frame.AppendLine(GameTexts.PausePrompt);
         frame.AppendLine(GameTexts.SavePrompt);
         frame.AppendLine(GameTexts.QuitPrompt);
 
         Console.Write(frame.ToString());
     }
 
-    public void DisplayMessage(string message) =>
+    public void DisplayMessage(string message)
+    {
         Console.WriteLine(message);
+    }
 }

@@ -3,8 +3,6 @@
 public static class GameTexts
 {
     public const string Title = "-- Conway's Game of Life --";
-    public const string EnterAlternateScreen = "\u001b[?1049h";
-    public const string ExitAlternateScreen = "\u001b[?1049l";
 
     public const string SelectBoardSize = "Select board size:";
     public const string SmallBoardChoice = "1";
@@ -36,17 +34,32 @@ public static class GameTexts
     public const string GenerationPrefix = "Generation: ";
     public const string LiveCellsPrefix = "Live cells: ";
 
-    public const string QuitPrompt = "Press Q to save and quit.";
-    public const string SavePrompt = "Press S to save the current game.";
-    public const string QuitMessage = "Simulation stopped.";
+    public const string PausePrompt =
+    "Press P to pause the simulation.";
+
+    public const string SavePrompt =
+        "Press S to save the current game.";
+
+    public const string QuitPrompt =
+        "Press Q to save and quit.";
+
+    public const string PausedMessage =
+        "Simulation paused. Press P to resume.";
+
+    public const string ResumedMessage =
+        "Simulation resumed.";
+
+    public const string QuitMessage =
+        "Game saved. Simulation stopped.";
 
     public const string RestorePrompt =
         "A saved game was found. Restore it? (Y/N): ";
 
-    public const string SaveSuccess = "Game state saved.";
-    public const string SaveFailure = "Could not save the game state.";
-    public const string RestoreFailure =
-        "The saved game could not be restored. Starting a new game.";
+    public const string SaveSuccess =
+        "Game state saved.";
+
+    public const string SaveFailure =
+        "Could not save the game state.";
 
     public const string InvalidBoardDimensions =
         "Board dimensions must be positive.";

@@ -10,14 +10,17 @@ public sealed class GameStateStorage
     public GameStateStorage(string? filePath = null)
     {
         _filePath = filePath ??
-            Path.Combine(AppContext.BaseDirectory, "game-state.json");
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "game-state.json");
     }
 
     public bool Save(GameBoard board, int generation)
     {
         try
         {
-            GameSaveData saveData = CreateSaveData(board, generation);
+            GameSaveData saveData =
+                CreateSaveData(board, generation);
 
             string json = ConvertToJson(saveData);
 
@@ -42,42 +45,25 @@ public sealed class GameStateStorage
             return null;
         }
 
-        try
-        {
-            string json = File.ReadAllText(_filePath);
+        string json = File.ReadAllText(_filePath);
 
-            GameSaveData? saveData =
-                JsonSerializer.Deserialize<GameSaveData>(json);
+        GameSaveData? saveData =
+            JsonSerializer.Deserialize<GameSaveData>(json);
 
-            if (!IsValidSaveData(saveData))
-            {
-                return null;
-            }
+        ValidateSaveData(saveData);
 
-            return saveData;
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return null;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
+        return saveData;
     }
 
-    private GameSaveData CreateSaveData(GameBoard board, int generation)
+    private GameSaveData CreateSaveData(
+        GameBoard board,
+        int generation)
     {
         return new GameSaveData
         {
             Rows = board.Rows,
             Columns = board.Columns,
             Generation = generation,
-
             Cells = CopyBoardCells(board)
         };
     }
@@ -90,9 +76,12 @@ public sealed class GameStateStorage
         {
             cells[row] = new bool[board.Columns];
 
-            for (int column = 0; column < board.Columns; column++)
+            for (int column = 0;
+                 column < board.Columns;
+                 column++)
             {
-                cells[row][column] = board.IsAlive(row, column);
+                cells[row][column] =
+                    board.IsAlive(row, column);
             }
         }
 
@@ -109,26 +98,37 @@ public sealed class GameStateStorage
             });
     }
 
-    private bool IsValidSaveData(GameSaveData? data)
+    private void ValidateSaveData(GameSaveData? data)
     {
-        if (data is null ||
-            data.Rows <= 0 ||
+        if (data is null)
+        {
+            throw new InvalidDataException(
+                "The saved game data is empty or invalid.");
+        }
+
+        if (data.Rows <= 0 ||
             data.Columns <= 0 ||
-            data.Generation < 0 ||
-            data.Cells is null ||
+            data.Generation < 0)
+        {
+            throw new InvalidDataException(
+                "The saved game contains invalid dimensions or generation.");
+        }
+
+        if (data.Cells is null ||
             data.Cells.Length != data.Rows)
         {
-            return false;
+            throw new InvalidDataException(
+                "The saved game contains an invalid number of rows.");
         }
 
         foreach (bool[]? row in data.Cells)
         {
-            if (row is null || row.Length != data.Columns)
+            if (row is null ||
+                row.Length != data.Columns)
             {
-                return false;
+                throw new InvalidDataException(
+                    "The saved game contains invalid row data.");
             }
         }
-
-        return true;
     }
 }
