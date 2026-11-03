@@ -95,17 +95,18 @@ public sealed class GameController
                 ConsoleKey key =
                     Console.ReadKey(intercept: true).Key;
 
-                if (key == ConsoleKey.Q)
+
+                if (key == _settings.QuitKey)
                 {
                     _storage.Save(board, generation);
                     return true;
                 }
 
-                if (key == ConsoleKey.P)
+                if (key == _settings.PauseKey)
                 {
                     PauseGame(board, generation);
                 }
-                else if (key == ConsoleKey.S)
+                else if (key == _settings.SaveKey)
                 {
                     bool saved =
                         _storage.Save(board, generation);
@@ -167,7 +168,7 @@ public sealed class GameController
         GameBoard board,
         int generation)
     {
-        const int inputCheckInterval = 50;
+        int inputCheckInterval = _settings.inputCheckIntervalMilliseconds;
 
         int elapsedMilliseconds = 0;
 
