@@ -20,22 +20,35 @@ public sealed class GameBoard
 
         Rows = rows;
         Columns = columns;
-
         _cells = new bool[rows, columns];
     }
 
     public bool IsAlive(int row, int column)
     {
         ValidateCoordinates(row, column);
-
         return _cells[row, column];
     }
 
     public void SetCell(int row, int column, bool isAlive)
     {
         ValidateCoordinates(row, column);
-
         _cells[row, column] = isAlive;
+    }
+
+    public int CountLiveCells()
+    {
+        int count = 0;
+
+        for (int row = 0; row < Rows; row++)
+        {
+            for (int column = 0; column < Columns; column++)
+            {
+                if (_cells[row, column])
+                    count++;
+            }
+        }
+
+        return count;
     }
 
     public int CountLiveNeighbors(int row, int column)
@@ -78,6 +91,6 @@ public sealed class GameBoard
 
         throw new ArgumentOutOfRangeException(
             nameof(row),
-            GameTexts.InvalidCellCoordinates);
+            GameTexts.CellCoordinatesOutsideBoard);
     }
 }

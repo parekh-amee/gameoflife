@@ -1,4 +1,5 @@
 ﻿using GameOfLife.ConsoleApp.Configuration;
+using GameOfLife.ConsoleApp.Models;
 using GameOfLife.ConsoleApp.Services;
 using GameOfLife.ConsoleApp.Views;
 
@@ -10,107 +11,245 @@ public sealed class GameController
     private readonly ConsoleView _view;
     private readonly GameBoardFactory _boardFactory;
     private readonly GameEngine _engine;
+    private readonly GameStateStorage _storage;
 
     public GameController(
         GameSettings settings,
         ConsoleView view,
         GameBoardFactory boardFactory,
-        GameEngine engine)
+        GameEngine engine,
+        GameStateStorage storage)
     {
         _settings = settings;
         _view = view;
         _boardFactory = boardFactory;
         _engine = engine;
+        _storage = storage;
     }
 
     public void Run()
     {
-        (int Rows, int Columns) dimensions = SelectBoardDimensions();
+        GameBoard board;
+        int generation;
 
-        if (dimensions.Rows == 0)
-            return;
+        GameSaveData? savedGame = _storage.Load();
 
-        var board = _boardFactory.CreateRandomBoard(
-            dimensions.Rows,
-            dimensions.Columns);
-
-        int generation = 0;
-
-        try
+        if (savedGame is not null &&
+            _view.ConfirmRestoreSavedGame())
         {
-            Console.CursorVisible = false;
-            Console.SetCursorPosition(0, 0);
-            while (true)
-            {
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-
-                _view.DisplayBoard(board, generation);
-
-                if (IsQuitRequested())
-                    break;
-
-                Thread.Sleep(_settings.UpdateIntervalMilliseconds);
-
-                if (IsQuitRequested())
-                    break;
-
-                board = _engine.NextGeneration(board);
-                generation++;
-
-            }
+            board = RestoreBoard(savedGame);
+            generation = savedGame.Generation;
         }
-        finally
+        else
         {
-            Console.CursorVisible = true;
-            
+            (int Rows, int Columns) dimensions =
+                SelectBoardDimensions();
+
+            if (dimensions.Rows == 0)
+            {
+                return;
+            }
+
+            board = _boardFactory.CreateRandomBoard(
+                dimensions.Rows,
+                dimensions.Columns);
+
+            generation = 0;
+        }
+
+        _storage.Save(board, generation);
+
+        while (true)
+        {
+            Console.Clear();
+
+            _view.DisplayBoard(board, generation);
+
+            if (HandleInput(board, generation))
+            {
+                break;
+            }
+
+            if (WaitForNextGeneration(board, generation))
+            {
+                break;
+            }
+
+            board = _engine.NextGeneration(board);
+            generation++;
+
+            _storage.Save(board, generation);
         }
 
         _view.DisplayMessage(GameTexts.QuitMessage);
     }
 
-    private bool IsQuitRequested()
+    private bool HandleInput(
+        GameBoard board,
+        int generation)
     {
         try
         {
             while (Console.KeyAvailable)
             {
-                if (Console.ReadKey(intercept: true).Key == ConsoleKey.Q)
+                ConsoleKey key =
+                    Console.ReadKey(intercept: true).Key;
+
+
+                if (key == _settings.QuitKey)
+                {
+                    _storage.Save(board, generation);
                     return true;
+                }
+
+                if (key == _settings.PauseKey)
+                {
+                    PauseGame(board, generation);
+                }
+                else if (key == _settings.SaveKey)
+                {
+                    bool saved =
+                        _storage.Save(board, generation);
+
+                    _view.DisplayMessage(
+                        saved
+                            ? GameTexts.SaveSuccess
+                            : GameTexts.SaveFailure);
+                }
             }
         }
         catch (InvalidOperationException)
         {
-            return false;
+            // Console input is unavailable.
         }
 
         return false;
     }
 
-    private (int Rows, int Columns) SelectBoardDimensions()
+    private void PauseGame(
+        GameBoard board,
+        int generation)
+    {
+        _view.DisplayMessage(GameTexts.PausedMessage);
+
+        while (true)
+        {
+            ConsoleKey key =
+                Console.ReadKey(intercept: true).Key;
+
+            if (key == ConsoleKey.P)
+            {
+                _view.DisplayMessage(
+                    GameTexts.ResumedMessage);
+
+                return;
+            }
+
+            if (key == ConsoleKey.S)
+            {
+                bool saved =
+                    _storage.Save(board, generation);
+
+                _view.DisplayMessage(
+                    saved
+                        ? GameTexts.SaveSuccess
+                        : GameTexts.SaveFailure);
+            }
+
+            if (key == ConsoleKey.Q)
+            {
+                _storage.Save(board, generation);
+                Environment.Exit(0);
+            }
+        }
+    }
+
+    private bool WaitForNextGeneration(
+        GameBoard board,
+        int generation)
+    {
+        int inputCheckInterval = _settings.inputCheckIntervalMilliseconds;
+
+        int elapsedMilliseconds = 0;
+
+        while (elapsedMilliseconds <
+               _settings.UpdateIntervalMilliseconds)
+        {
+            Thread.Sleep(inputCheckInterval);
+
+            elapsedMilliseconds += inputCheckInterval;
+
+            if (HandleInput(board, generation))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private GameBoard RestoreBoard(GameSaveData data)
+    {
+        GameBoard board = new(
+            data.Rows,
+            data.Columns);
+
+        for (int row = 0; row < data.Rows; row++)
+        {
+            for (int column = 0;
+                 column < data.Columns;
+                 column++)
+            {
+                board.SetCell(
+                    row,
+                    column,
+                    data.Cells[row][column]);
+            }
+        }
+
+        return board;
+    }
+
+    private (int Rows, int Columns)
+        SelectBoardDimensions()
     {
         _view.DisplayMenu(_settings);
 
-        string? choice = _view.ReadMenuChoice()?.Trim().ToLowerInvariant();
+        string? choice =
+            _view.ReadMenuChoice()?.Trim();
 
         switch (choice)
         {
             case GameTexts.SmallBoardChoice:
-                return (_settings.SmallBoardSize, _settings.SmallBoardSize);
+                return (
+                    _settings.SmallBoardSize,
+                    _settings.SmallBoardSize);
 
             case GameTexts.MediumBoardChoice:
-                return (_settings.MediumBoardSize, _settings.MediumBoardSize);
+                return (
+                    _settings.MediumBoardSize,
+                    _settings.MediumBoardSize);
 
             case GameTexts.LargeBoardChoice:
-                return (_settings.LargeBoardSize, _settings.LargeBoardSize);
+                return (
+                    _settings.LargeBoardSize,
+                    _settings.LargeBoardSize);
 
             case GameTexts.CustomBoardChoice:
-                int rows = _view.ReadDimension(GameTexts.EnterRows, _settings);
-                int columns = _view.ReadDimension(GameTexts.EnterColumns, _settings);
+                int rows = _view.ReadDimension(
+                    GameTexts.EnterRows,
+                    _settings);
+
+                int columns = _view.ReadDimension(
+                    GameTexts.EnterColumns,
+                    _settings);
+
                 return (rows, columns);
 
             default:
-                _view.DisplayMessage(GameTexts.InvalidChoice);
+                _view.DisplayMessage(
+                    GameTexts.InvalidChoice);
+
                 return (0, 0);
         }
     }
