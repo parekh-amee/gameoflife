@@ -27,7 +27,7 @@ public sealed class GameController
     {
         (int Rows, int Columns) dimensions = SelectBoardDimensions();
 
-        if (dimensions.Rows == 0)
+        if (dimensions.Rows == 0 || dimensions.Columns == 0)
             return;
 
         var board = _boardFactory.CreateRandomBoard(
