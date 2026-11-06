@@ -27,7 +27,7 @@ public sealed class GameController
     {
         (int Rows, int Columns) dimensions = SelectBoardDimensions();
 
-        if (dimensions.Rows == 0 || dimensions.Columns == 0)
+        if (dimensions.Rows <= 0 || dimensions.Columns <= 0)
             return;
 
         var board = _boardFactory.CreateRandomBoard(
@@ -39,7 +39,7 @@ public sealed class GameController
         try
         {
             Console.CursorVisible = false;
-            Console.SetCursorPosition(0, 0);
+
             while (true)
             {
                 Console.Clear();
@@ -47,26 +47,43 @@ public sealed class GameController
 
                 _view.DisplayBoard(board, generation);
 
-                if (IsQuitRequested())
-                    break;
-
-                Thread.Sleep(_settings.UpdateIntervalMilliseconds);
-
-                if (IsQuitRequested())
+                if (WaitForNextGeneration())
                     break;
 
                 board = _engine.NextGeneration(board);
                 generation++;
-
             }
         }
         finally
         {
             Console.CursorVisible = true;
-            
         }
 
         _view.DisplayMessage(GameTexts.QuitMessage);
+    }
+
+    private bool WaitForNextGeneration()
+    {
+        int elapsedMilliseconds = 0;
+        const int inputCheckInterval = 50;
+
+        while (elapsedMilliseconds < _settings.UpdateIntervalMilliseconds)
+        {
+            if (IsQuitRequested())
+                return true;
+
+            int remainingMilliseconds =
+                _settings.UpdateIntervalMilliseconds - elapsedMilliseconds;
+
+            int waitMilliseconds = Math.Min(
+                inputCheckInterval,
+                remainingMilliseconds);
+
+            Thread.Sleep(waitMilliseconds);
+            elapsedMilliseconds += waitMilliseconds;
+        }
+
+        return IsQuitRequested();
     }
 
     private bool IsQuitRequested()
@@ -105,8 +122,12 @@ public sealed class GameController
                 return (_settings.LargeBoardSize, _settings.LargeBoardSize);
 
             case GameTexts.CustomBoardChoice:
-                int rows = _view.ReadDimension(GameTexts.EnterRows, _settings);
-                int columns = _view.ReadDimension(GameTexts.EnterColumns, _settings);
+                int rows = _view.ReadDimension(
+                    GameTexts.EnterRows, _settings);
+
+                int columns = _view.ReadDimension(
+                    GameTexts.EnterColumns, _settings);
+
                 return (rows, columns);
 
             default:
