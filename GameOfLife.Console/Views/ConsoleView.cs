@@ -1,11 +1,19 @@
 ﻿using System.Text;
 using GameOfLife.ConsoleApp.Configuration;
 using GameOfLife.ConsoleApp.Models;
+using GameOfLife.ConsoleApp.Services;
 
 namespace GameOfLife.ConsoleApp.Views;
 
 public sealed class ConsoleView
 {
+    private readonly GameBoardService _boardService;
+
+    public ConsoleView(GameBoardService boardService)
+    {
+        _boardService = boardService;
+    }
+
     public void DisplayMenu(GameSettings settings)
     {
         StringBuilder menu = new();
@@ -67,15 +75,15 @@ public sealed class ConsoleView
         StringBuilder frame = new();
 
         frame.AppendLine(GameTexts.Title);
-        frame.AppendLine($"{GameTexts.GenerationPrefix}{generation}");
-        
+        frame.AppendLine(
+            $"{GameTexts.GenerationPrefix}{generation}");
 
         for (int row = 0; row < board.Rows; row++)
         {
             for (int column = 0; column < board.Columns; column++)
             {
                 frame.Append(
-                    board.IsAlive(row, column)
+                    _boardService.IsAlive(board, row, column)
                         ? GameTexts.AliveCell
                         : GameTexts.DeadCell);
             }
@@ -83,15 +91,11 @@ public sealed class ConsoleView
             frame.AppendLine();
         }
 
-        
         frame.AppendLine(GameTexts.AliveLegend);
         frame.AppendLine(GameTexts.QuitPrompt);
 
         Console.Write(frame.ToString());
     }
-
-
-
 
     public void DisplayMessage(string message) =>
         Console.WriteLine(message);

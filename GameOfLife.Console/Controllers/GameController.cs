@@ -47,8 +47,10 @@ public sealed class GameController
 
                 _view.DisplayBoard(board, generation);
 
-                if (WaitForNextGeneration())
+                if (IsQuitRequested())
                     break;
+
+                Thread.Sleep(_settings.UpdateIntervalMilliseconds);
 
                 board = _engine.NextGeneration(board);
                 generation++;
@@ -62,29 +64,7 @@ public sealed class GameController
         _view.DisplayMessage(GameTexts.QuitMessage);
     }
 
-    private bool WaitForNextGeneration()
-    {
-        int elapsedMilliseconds = 0;
-        const int inputCheckInterval = 50;
-
-        while (elapsedMilliseconds < _settings.UpdateIntervalMilliseconds)
-        {
-            if (IsQuitRequested())
-                return true;
-
-            int remainingMilliseconds =
-                _settings.UpdateIntervalMilliseconds - elapsedMilliseconds;
-
-            int waitMilliseconds = Math.Min(
-                inputCheckInterval,
-                remainingMilliseconds);
-
-            Thread.Sleep(waitMilliseconds);
-            elapsedMilliseconds += waitMilliseconds;
-        }
-
-        return IsQuitRequested();
-    }
+  
 
     private bool IsQuitRequested()
     {

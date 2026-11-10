@@ -4,6 +4,13 @@ namespace GameOfLife.ConsoleApp.Services;
 
 public sealed class GameEngine
 {
+    private readonly GameBoardService _boardService;
+
+    public GameEngine(GameBoardService boardService)
+    {
+        _boardService = boardService;
+    }
+
     public GameBoard NextGeneration(GameBoard currentBoard)
     {
         GameBoard nextBoard = new(
@@ -17,12 +24,14 @@ public sealed class GameEngine
                 int neighbors = CountLiveNeighbors(
                     currentBoard, row, column);
 
-                bool isAlive = currentBoard.IsAlive(row, column);
+                bool isAlive = _boardService.IsAlive(
+                    currentBoard, row, column);
 
                 bool nextCellState =
                     neighbors == 3 || (isAlive && neighbors == 2);
 
-                nextBoard.SetCell(row, column, nextCellState);
+                _boardService.SetCell(
+                    nextBoard, row, column, nextCellState);
             }
         }
 
@@ -51,8 +60,11 @@ public sealed class GameEngine
                     neighborColumn >= board.Columns)
                     continue;
 
-                if (board.IsAlive(neighborRow, neighborColumn))
+                if (_boardService.IsAlive(
+                    board, neighborRow, neighborColumn))
+                {
                     liveNeighbors++;
+                }
             }
         }
 

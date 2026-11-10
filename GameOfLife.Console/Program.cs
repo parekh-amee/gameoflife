@@ -5,11 +5,15 @@ using GameOfLife.ConsoleApp.Views;
 
 GameSettings settings = new();
 
-ConsoleView view = new();
+GameBoardService boardService = new();
 
-GameBoardFactory boardFactory = new(settings);
+ConsoleView view = new(boardService);
 
-GameEngine engine = new();
+GameBoardFactory boardFactory = new(
+    settings,
+    boardService);
+
+GameEngine engine = new(boardService);
 
 GameController controller = new(
     settings,
