@@ -4,16 +4,26 @@ using GameOfLife.ConsoleApp.Services;
 using GameOfLife.ConsoleApp.Views;
 
 GameSettings settings = new();
-ConsoleView view = new();
-GameBoardFactory boardFactory = new(settings);
-GameEngine engine = new();
-GameStateStorage storage = new();
+
+GameBoardService boardService = new();
+
+ConsoleView view = new(boardService);
+
+GameBoardFactory boardFactory = new(
+    settings,
+    boardService);
+
+GameEngine engine = new(boardService);
+
+GameStateStorage storage = new(boardService);
 
 GameController controller = new(
     settings,
     view,
     boardFactory,
     engine,
-    storage);
+    storage,
+    boardService);
 
 controller.Run();
+

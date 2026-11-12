@@ -1,11 +1,19 @@
 ﻿using System.Text;
 using GameOfLife.ConsoleApp.Configuration;
 using GameOfLife.ConsoleApp.Models;
+using GameOfLife.ConsoleApp.Services;
 
 namespace GameOfLife.ConsoleApp.Views;
 
 public sealed class ConsoleView
 {
+    private readonly GameBoardService _boardService;
+
+    public ConsoleView(GameBoardService boardService)
+    {
+        _boardService = boardService;
+    }
+
     public void DisplayMenu(GameSettings settings)
     {
         StringBuilder menu = new();
@@ -91,7 +99,7 @@ public sealed class ConsoleView
             $"{GameTexts.GenerationPrefix}{generation}");
 
         frame.AppendLine(
-            $"{GameTexts.LiveCellsPrefix}{board.CountLiveCells()}");
+            $"{GameTexts.LiveCellsPrefix}{_boardService.CountLiveCells(board)}");
 
         frame.AppendLine();
 
@@ -102,7 +110,7 @@ public sealed class ConsoleView
                  column++)
             {
                 frame.Append(
-                    board.IsAlive(row, column)
+                    _boardService.IsAlive(board, row, column)
                         ? GameTexts.AliveCell
                         : GameTexts.DeadCell);
             }

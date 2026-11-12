@@ -12,19 +12,22 @@ public sealed class GameController
     private readonly GameBoardFactory _boardFactory;
     private readonly GameEngine _engine;
     private readonly GameStateStorage _storage;
+    private readonly GameBoardService _boardService;
 
     public GameController(
         GameSettings settings,
         ConsoleView view,
         GameBoardFactory boardFactory,
         GameEngine engine,
-        GameStateStorage storage)
+        GameStateStorage storage,
+        GameBoardService boardService)
     {
         _settings = settings;
         _view = view;
         _boardFactory = boardFactory;
         _engine = engine;
         _storage = storage;
+        _boardService = boardService;
     }
 
     public void Run()
@@ -45,7 +48,8 @@ public sealed class GameController
             (int Rows, int Columns) dimensions =
                 SelectBoardDimensions();
 
-            if (dimensions.Rows == 0)
+            if (dimensions.Rows <= 0 ||
+                dimensions.Columns <= 0)
             {
                 return;
             }
@@ -59,26 +63,36 @@ public sealed class GameController
 
         _storage.Save(board, generation);
 
-        while (true)
+        Console.CursorVisible = false;
+
+        try
         {
-            Console.Clear();
-
-            _view.DisplayBoard(board, generation);
-
-            if (HandleInput(board, generation))
+            while (true)
             {
-                break;
+                Console.Clear();
+                Console.SetCursorPosition(0, 0);
+
+                _view.DisplayBoard(board, generation);
+
+                if (HandleInput(board, generation))
+                {
+                    break;
+                }
+
+                if (WaitForNextGeneration(board, generation))
+                {
+                    break;
+                }
+
+                board = _engine.NextGeneration(board);
+                generation++;
+
+                _storage.Save(board, generation);
             }
-
-            if (WaitForNextGeneration(board, generation))
-            {
-                break;
-            }
-
-            board = _engine.NextGeneration(board);
-            generation++;
-
-            _storage.Save(board, generation);
+        }
+        finally
+        {
+            Console.CursorVisible = true;
         }
 
         _view.DisplayMessage(GameTexts.QuitMessage);
@@ -95,7 +109,6 @@ public sealed class GameController
                 ConsoleKey key =
                     Console.ReadKey(intercept: true).Key;
 
-
                 if (key == _settings.QuitKey)
                 {
                     _storage.Save(board, generation);
@@ -104,7 +117,10 @@ public sealed class GameController
 
                 if (key == _settings.PauseKey)
                 {
-                    PauseGame(board, generation);
+                    if (PauseGame(board, generation))
+                    {
+                        return true;
+                    }
                 }
                 else if (key == _settings.SaveKey)
                 {
@@ -126,7 +142,7 @@ public sealed class GameController
         return false;
     }
 
-    private void PauseGame(
+    private bool PauseGame(
         GameBoard board,
         int generation)
     {
@@ -137,15 +153,15 @@ public sealed class GameController
             ConsoleKey key =
                 Console.ReadKey(intercept: true).Key;
 
-            if (key == ConsoleKey.P)
+            if (key == _settings.PauseKey)
             {
                 _view.DisplayMessage(
                     GameTexts.ResumedMessage);
 
-                return;
+                return false;
             }
 
-            if (key == ConsoleKey.S)
+            if (key == _settings.SaveKey)
             {
                 bool saved =
                     _storage.Save(board, generation);
@@ -156,10 +172,10 @@ public sealed class GameController
                         : GameTexts.SaveFailure);
             }
 
-            if (key == ConsoleKey.Q)
+            if (key == _settings.QuitKey)
             {
                 _storage.Save(board, generation);
-                Environment.Exit(0);
+                return true;
             }
         }
     }
@@ -168,7 +184,8 @@ public sealed class GameController
         GameBoard board,
         int generation)
     {
-        int inputCheckInterval = _settings.inputCheckIntervalMilliseconds;
+        int inputCheckInterval =
+            _settings.inputCheckIntervalMilliseconds;
 
         int elapsedMilliseconds = 0;
 
@@ -200,7 +217,8 @@ public sealed class GameController
                  column < data.Columns;
                  column++)
             {
-                board.SetCell(
+                _boardService.SetCell(
+                    board,
                     row,
                     column,
                     data.Cells[row][column]);
@@ -210,8 +228,7 @@ public sealed class GameController
         return board;
     }
 
-    private (int Rows, int Columns)
-        SelectBoardDimensions()
+    private (int Rows, int Columns) SelectBoardDimensions()
     {
         _view.DisplayMenu(_settings);
 

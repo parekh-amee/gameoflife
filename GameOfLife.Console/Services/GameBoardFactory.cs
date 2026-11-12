@@ -7,13 +7,15 @@ public sealed class GameBoardFactory
 {
     private readonly GameSettings _settings;
     private readonly Random _random;
-
+    private readonly GameBoardService _boardService;
     public GameBoardFactory(
         GameSettings settings,
+        GameBoardService boardService,
         Random? random = null)
     {
         _settings = settings;
         _random = random ?? Random.Shared;
+        _boardService = boardService;
 
         if (_settings.InitialAlivePercentage is < 0 or > 100)
         {
@@ -35,7 +37,7 @@ public sealed class GameBoardFactory
                     _random.Next(100) <
                     _settings.InitialAlivePercentage;
 
-                board.SetCell(row, column, isAlive);
+                _boardService.SetCell(board, row, column, isAlive);
             }
         }
 

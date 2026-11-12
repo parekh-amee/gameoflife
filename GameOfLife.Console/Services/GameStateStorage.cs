@@ -6,9 +6,14 @@ namespace GameOfLife.ConsoleApp.Services;
 public sealed class GameStateStorage
 {
     private readonly string _filePath;
+    private readonly GameBoardService _boardService;
 
-    public GameStateStorage(string? filePath = null)
+    public GameStateStorage(
+        GameBoardService boardService,
+        string? filePath = null)
     {
+        _boardService = boardService;
+
         _filePath = filePath ??
             Path.Combine(
                 AppContext.BaseDirectory,
@@ -81,7 +86,7 @@ public sealed class GameStateStorage
                  column++)
             {
                 cells[row][column] =
-                    board.IsAlive(row, column);
+                    _boardService.IsAlive(board, row, column);
             }
         }
 
