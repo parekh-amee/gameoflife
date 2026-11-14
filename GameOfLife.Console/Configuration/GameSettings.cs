@@ -1,12 +1,12 @@
 ﻿namespace GameOfLife.ConsoleApp.Configuration;
 
-public sealed class GameSettings
+public class GameSettings
 {
     public int InitialAlivePercentage { get; init; } = 30;
 
     public int UpdateIntervalMilliseconds { get; init; } = 1000;
 
-    public int inputCheckIntervalMilliseconds { get; init; } = 50;
+    public int InputCheckIntervalMilliseconds { get; init; } = 50;
     public ConsoleKey PauseKey { get; init; } = ConsoleKey.P;
     public ConsoleKey SaveKey { get; init; } = ConsoleKey.S;
     public ConsoleKey QuitKey { get; init; } = ConsoleKey.Q;

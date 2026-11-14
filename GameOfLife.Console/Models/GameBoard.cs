@@ -1,6 +1,6 @@
 ﻿namespace GameOfLife.ConsoleApp.Models;
 
-public sealed class GameBoard
+public class GameBoard
 {
     public int Rows { get; }
 

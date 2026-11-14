@@ -9,21 +9,14 @@ GameBoardService boardService = new();
 
 ConsoleView view = new(boardService);
 
-GameBoardFactory boardFactory = new(
-    settings,
-    boardService);
+GameBoardFactory boardFactory = new(settings,boardService);
 
-GameEngine engine = new(boardService);
+GameEngine engine = new();
+
+GameSimulationService simulationService = new(engine,boardService,boardFactory);
 
 GameStateStorage storage = new(boardService);
 
-GameController controller = new(
-    settings,
-    view,
-    boardFactory,
-    engine,
-    storage,
-    boardService);
+GameController controller = new(settings,view,boardFactory,simulationService,storage);
 
 controller.Run();
-

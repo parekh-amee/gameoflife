@@ -1,36 +1,27 @@
 ﻿using System.Text.Json;
+using GameOfLife.ConsoleApp.Configuration;
 using GameOfLife.ConsoleApp.Models;
 
 namespace GameOfLife.ConsoleApp.Services;
 
-public sealed class GameStateStorage
+public class GameStateStorage
 {
     private readonly string _filePath;
     private readonly GameBoardService _boardService;
 
-    public GameStateStorage(
-        GameBoardService boardService,
-        string? filePath = null)
+    public GameStateStorage(GameBoardService boardService,string? filePath = null)
     {
         _boardService = boardService;
-
-        _filePath = filePath ??
-            Path.Combine(
-                AppContext.BaseDirectory,
-                "game-state.json");
+        _filePath = filePath ?? Path.Combine(AppContext.BaseDirectory,GameTexts.DefaultSaveFileName);
     }
 
     public bool Save(GameBoard board, int generation)
     {
         try
         {
-            GameSaveData saveData =
-                CreateSaveData(board, generation);
-
-            string json = ConvertToJson(saveData);
-
+            GameSaveData saveData = CreateSaveData(board, generation);
+            string json = JsonSerializer.Serialize(saveData, CreateJsonOptions());
             File.WriteAllText(_filePath, json);
-
             return true;
         }
         catch (IOException)
@@ -51,18 +42,13 @@ public sealed class GameStateStorage
         }
 
         string json = File.ReadAllText(_filePath);
-
-        GameSaveData? saveData =
-            JsonSerializer.Deserialize<GameSaveData>(json);
+        GameSaveData? saveData = JsonSerializer.Deserialize<GameSaveData>(json, CreateJsonOptions());
 
         ValidateSaveData(saveData);
-
         return saveData;
     }
 
-    private GameSaveData CreateSaveData(
-        GameBoard board,
-        int generation)
+    private GameSaveData CreateSaveData(GameBoard board, int generation)
     {
         return new GameSaveData
         {
@@ -73,67 +59,47 @@ public sealed class GameStateStorage
         };
     }
 
-    private bool[][] CopyBoardCells(GameBoard board)
+    private bool[,] CopyBoardCells(GameBoard board)
     {
-        bool[][] cells = new bool[board.Rows][];
+        bool[,] cells = new bool[board.Rows, board.Columns];
 
         for (int row = 0; row < board.Rows; row++)
         {
-            cells[row] = new bool[board.Columns];
-
-            for (int column = 0;
-                 column < board.Columns;
-                 column++)
+            for (int column = 0; column < board.Columns; column++)
             {
-                cells[row][column] =
-                    _boardService.IsAlive(board, row, column);
+                cells[row, column] = _boardService.IsAlive(board, row, column);
             }
         }
 
         return cells;
     }
 
-    private string ConvertToJson(GameSaveData saveData)
+    private static JsonSerializerOptions CreateJsonOptions()
     {
-        return JsonSerializer.Serialize(
-            saveData,
-            new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+        JsonSerializerOptions options = new()
+        {
+            WriteIndented = true
+        };
+
+        options.Converters.Add(new JsonConverter());
+        return options;
     }
 
     private void ValidateSaveData(GameSaveData? data)
     {
         if (data is null)
         {
-            throw new InvalidDataException(
-                "The saved game data is empty or invalid.");
+            throw new InvalidDataException(GameTexts.InvalidSavedGameData);
         }
 
-        if (data.Rows <= 0 ||
-            data.Columns <= 0 ||
-            data.Generation < 0)
+        if (data.Rows <= 0 || data.Columns <= 0 || data.Generation < 0)
         {
-            throw new InvalidDataException(
-                "The saved game contains invalid dimensions or generation.");
+            throw new InvalidDataException(GameTexts.InvalidSavedGameDimensions);
         }
 
-        if (data.Cells is null ||
-            data.Cells.Length != data.Rows)
+        if (data.Cells is null || data.Cells.GetLength(0) != data.Rows || data.Cells.GetLength(1) != data.Columns)
         {
-            throw new InvalidDataException(
-                "The saved game contains an invalid number of rows.");
-        }
-
-        foreach (bool[]? row in data.Cells)
-        {
-            if (row is null ||
-                row.Length != data.Columns)
-            {
-                throw new InvalidDataException(
-                    "The saved game contains invalid row data.");
-            }
+            throw new InvalidDataException(GameTexts.InvalidSavedGameCells);
         }
     }
 }

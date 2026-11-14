@@ -1,6 +1,6 @@
 ﻿namespace GameOfLife.ConsoleApp.Models;
 
-public sealed class GameSaveData
+public class GameSaveData
 {
     public int Rows { get; set; }
 
@@ -8,5 +8,5 @@ public sealed class GameSaveData
 
     public int Generation { get; set; }
 
-    public bool[][] Cells { get; set; } = [];
+    public bool[,] Cells { get; set; } = new bool[0, 0];
 }

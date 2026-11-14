@@ -3,6 +3,8 @@
 public static class GameTexts
 {
     public const string Title = "-- Conway's Game of Life --";
+    public const string DefaultSaveFileName = "game-state.json";
+    public const string RestoreYesInput = "Y";
 
     public const string SelectBoardSize = "Select board size:";
     public const string SmallBoardChoice = "1";
@@ -18,14 +20,11 @@ public static class GameTexts
     public const string EnterRows = "Enter number of rows:";
     public const string EnterColumns = "Enter number of columns:";
 
-    public const string InvalidChoice =
-        "Invalid choice. Please select a valid option.";
+    public const string InvalidChoice =  "Invalid choice. Please select a valid option.";
 
-    public const string InvalidSize =
-        "Invalid size. Enter a whole number in the allowed range.";
+    public const string InvalidSize = "Invalid size. Enter a whole number in the allowed range.";
 
-    public const string BoardSizeRangeFormat =
-        "Allowed board dimensions: {0} to {1}.";
+    public const string BoardSizeRangeFormat = "Allowed board dimensions: {0} to {1}.";
 
     public const string AliveCell = "■ ";
     public const string DeadCell = "· ";
@@ -34,39 +33,33 @@ public static class GameTexts
     public const string GenerationPrefix = "Generation: ";
     public const string LiveCellsPrefix = "Live cells: ";
 
-    public const string PausePrompt =
-    "Press P to pause the simulation.";
+    public const string PausePromptFormat = "Press {0} to pause the simulation.";
 
-    public const string SavePrompt =
-        "Press S to save the current game.";
+    public const string SavePromptFormat = "Press {0} to save the current game.";
 
-    public const string QuitPrompt =
-        "Press Q to save and quit.";
+    public const string QuitPromptFormat = "Press {0} to quit.";
 
-    public const string PausedMessage =
-        "Simulation paused. Press P to resume.";
+    public const string PausedMessageFormat = "Simulation paused. Press {0} to resume, {1} to save, or {2} to quit.";
 
-    public const string ResumedMessage =
-        "Simulation resumed.";
+    public const string ResumedMessage = "Simulation resumed.";
 
-    public const string QuitMessage =
-        "Game saved. Simulation stopped.";
+    public const string QuitMessage = "Simulation stopped.";
 
-    public const string RestorePrompt =
-        "A saved game was found. Restore it? (Y/N): ";
+    public const string RestorePrompt = "A saved game was found. Restore it? (Y/N): ";
 
-    public const string SaveSuccess =
-        "Game state saved.";
+    public const string SaveSuccess = "Game state saved.";
 
-    public const string SaveFailure =
-        "Could not save the game state.";
+    public const string SaveFailure = "Could not save the game state.";
 
-    public const string InvalidBoardDimensions =
-        "Board dimensions must be positive.";
+    public const string InvalidBoardDimensions = "Board dimensions must be positive.";
 
-    public const string InvalidAlivePercentage =
-        "Initial alive percentage must be between 0 and 100.";
+    public const string InvalidAlivePercentage = "Initial alive percentage must be between 0 and 100.";
 
-    public const string CellCoordinatesOutsideBoard =
-        "Cell coordinates are outside the board.";
+    public const string CellCoordinatesOutsideBoard = "Cell coordinates are outside the board.";
+
+    public const string InvalidSavedGameData = "The saved game data is empty or invalid.";
+
+    public const string InvalidSavedGameDimensions = "The saved game contains invalid dimensions or generation.";
+
+    public const string InvalidSavedGameCells = "The saved game contains invalid cell data.";
 }
