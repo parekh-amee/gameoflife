@@ -2,21 +2,9 @@
 
 namespace GameOfLife.ConsoleApp.Services;
 
+// Performs calculations on board data. It does not create, display or save boards.
 public class GameBoardService
 {
-    public bool IsAlive(GameBoard board, int row, int column)
-    {
-        ValidateCoordinates(board, row, column);
-        return board.Cells[row, column];
-    }
-
-    public void SetCell(
-        GameBoard board, int row, int column, bool isAlive)
-    {
-        ValidateCoordinates(board, row, column);
-        board.Cells[row, column] = isAlive;
-    }
-
     public int CountLiveCells(GameBoard board)
     {
         int count = 0;
@@ -25,7 +13,7 @@ public class GameBoardService
         {
             for (int column = 0; column < board.Columns; column++)
             {
-                if (IsAlive(board, row, column))
+                if (board.Cells[row, column])
                 {
                     count++;
                 }
@@ -37,12 +25,13 @@ public class GameBoardService
 
     public int CountLiveNeighbors(GameBoard board, int row, int column)
     {
-        int liveNeighbors = 0;
+        int count = 0;
 
         for (int rowOffset = -1; rowOffset <= 1; rowOffset++)
         {
             for (int columnOffset = -1; columnOffset <= 1; columnOffset++)
             {
+                // The cell itself is not one of its neighbors.
                 if (rowOffset == 0 && columnOffset == 0)
                 {
                     continue;
@@ -51,32 +40,15 @@ public class GameBoardService
                 int neighborRow = row + rowOffset;
                 int neighborColumn = column + columnOffset;
 
-                if (neighborRow < 0 || neighborRow >= board.Rows || neighborColumn < 0 || neighborColumn >= board.Columns)
+                // Cells outside the board are ignored (no wrap-around).
+                if (neighborRow >= 0 && neighborRow < board.Rows && neighborColumn >= 0 && neighborColumn < board.Columns &&
+                    board.Cells[neighborRow, neighborColumn])
                 {
-                    continue;
-                }
-
-                if (IsAlive(board, neighborRow, neighborColumn))
-                {
-                    liveNeighbors++;
+                    count++;
                 }
             }
         }
 
-        return liveNeighbors;
-    }
-
-    private void ValidateCoordinates(
-        GameBoard board, int row, int column)
-    {
-        if (row < 0 || row >= board.Rows)
-        {
-            throw new ArgumentOutOfRangeException(nameof(row));
-        }
-
-        if (column < 0 || column >= board.Columns)
-        {
-            throw new ArgumentOutOfRangeException(nameof(column));
-        }
+        return count;
     }
 }

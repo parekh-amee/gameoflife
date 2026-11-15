@@ -1,31 +1,34 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using GameOfLife.ConsoleApp.Configuration;
 
 namespace GameOfLife.ConsoleApp.Services;
 
-public class JsonConverter : System.Text.Json.Serialization.JsonConverter<bool[,]>
+// Converts bool[,] to JSON nested rows and reads the same structure back.
+public class JsonConverter : JsonConverter<bool[,]>
 {
-    public override bool[,] Read(ref Utf8JsonReader reader,Type typeToConvert,JsonSerializerOptions options)
+    public override bool[,] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         using JsonDocument document = JsonDocument.ParseValue(ref reader);
         JsonElement rowsElement = document.RootElement;
 
-        if (rowsElement.ValueKind != JsonValueKind.Array)
+        if (rowsElement.ValueKind != JsonValueKind.Array || rowsElement.GetArrayLength() == 0)
         {
             throw new JsonException(GameTexts.InvalidSavedGameCells);
         }
 
         int rows = rowsElement.GetArrayLength();
-        int columns = 0;
 
-        if (rows > 0)
+        if (rowsElement[0].ValueKind != JsonValueKind.Array)
         {
-            if (rowsElement[0].ValueKind != JsonValueKind.Array)
-            {
-                throw new JsonException(GameTexts.InvalidSavedGameCells);
-            }
+            throw new JsonException(GameTexts.InvalidSavedGameCells);
+        }
 
-            columns = rowsElement[0].GetArrayLength();
+        int columns = rowsElement[0].GetArrayLength();
+
+        if (columns == 0)
+        {
+            throw new JsonException(GameTexts.InvalidSavedGameCells);
         }
 
         bool[,] cells = new bool[rows, columns];
@@ -34,6 +37,7 @@ public class JsonConverter : System.Text.Json.Serialization.JsonConverter<bool[,
         {
             JsonElement rowElement = rowsElement[row];
 
+            // A rectangular 2D array requires every row to have equal length.
             if (rowElement.ValueKind != JsonValueKind.Array || rowElement.GetArrayLength() != columns)
             {
                 throw new JsonException(GameTexts.InvalidSavedGameCells);
@@ -41,29 +45,31 @@ public class JsonConverter : System.Text.Json.Serialization.JsonConverter<bool[,
 
             for (int column = 0; column < columns; column++)
             {
-                if (rowElement[column].ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                JsonElement cell = rowElement[column];
+
+                if (cell.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
                 {
                     throw new JsonException(GameTexts.InvalidSavedGameCells);
                 }
 
-                cells[row, column] = rowElement[column].GetBoolean();
+                cells[row, column] = cell.GetBoolean();
             }
         }
 
         return cells;
     }
 
-    public override void Write(Utf8JsonWriter writer,bool[,] value,JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, bool[,] cells, JsonSerializerOptions options)
     {
         writer.WriteStartArray();
 
-        for (int row = 0; row < value.GetLength(0); row++)
+        for (int row = 0; row < cells.GetLength(0); row++)
         {
             writer.WriteStartArray();
 
-            for (int column = 0; column < value.GetLength(1); column++)
+            for (int column = 0; column < cells.GetLength(1); column++)
             {
-                writer.WriteBooleanValue(value[row, column]);
+                writer.WriteBooleanValue(cells[row, column]);
             }
 
             writer.WriteEndArray();

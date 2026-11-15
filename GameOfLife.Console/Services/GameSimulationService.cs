@@ -2,6 +2,7 @@
 
 namespace GameOfLife.ConsoleApp.Services;
 
+// Builds a complete next generation using board calculations and Conway's rules.
 public class GameSimulationService
 {
     private readonly GameEngine _engine;
@@ -17,22 +18,21 @@ public class GameSimulationService
 
     public GameBoard CreateNextGeneration(GameBoard currentBoard)
     {
-        GameBoard nextBoard = _boardFactory.CreateEmptyBoard(currentBoard.Rows,currentBoard.Columns);
+        GameBoard nextBoard = _boardFactory.CreateEmptyBoard(currentBoard.Rows, currentBoard.Columns);
 
         for (int row = 0; row < currentBoard.Rows; row++)
         {
             for (int column = 0; column < currentBoard.Columns; column++)
             {
-                bool isAlive = _boardService.IsAlive(currentBoard, row, column);
+                bool isAlive = currentBoard.Cells[row, column];
+                int neighbors = _boardService.CountLiveNeighbors(currentBoard, row, column);
 
-                int liveNeighbors = _boardService.CountLiveNeighbors(currentBoard, row, column);
-
-                bool nextCellState = _engine.CalculateNextCellState(isAlive, liveNeighbors);
-
-                _boardService.SetCell(nextBoard, row, column, nextCellState);
+                nextBoard.Cells[row, column] = _engine.CalculateNextCellState(isAlive, neighbors);
             }
         }
 
+        // Return a new board so current-generation cells are not overwritten
+        // while the next generation is still being calculated.
         return nextBoard;
     }
 }

@@ -4,31 +4,41 @@ using GameOfLife.ConsoleApp.Models;
 
 namespace GameOfLife.ConsoleApp.Services;
 
+// Responsible only for reading and writing saved game data.
 public class GameStateStorage
 {
     private readonly string _filePath;
-    private readonly GameBoardService _boardService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public GameStateStorage(GameBoardService boardService,string? filePath = null)
+    public GameStateStorage(string? filePath = null)
     {
-        _boardService = boardService;
-        _filePath = filePath ?? Path.Combine(AppContext.BaseDirectory,GameTexts.DefaultSaveFileName);
+        _filePath = filePath ?? Path.Combine(AppContext.BaseDirectory, GameTexts.SaveFileName);
+
+        _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+
+        _jsonOptions.Converters.Add(new JsonConverter());
     }
 
     public bool Save(GameBoard board, int generation)
     {
+        GameSaveData data = new()
+        {
+            Rows = board.Rows,
+            Columns = board.Columns,
+            Generation = generation,
+            Cells = (bool[,])board.Cells.Clone()
+        };
+
         try
         {
-            GameSaveData saveData = CreateSaveData(board, generation);
-            string json = JsonSerializer.Serialize(saveData, CreateJsonOptions());
+            string json = JsonSerializer.Serialize(data, _jsonOptions);
             File.WriteAllText(_filePath, json);
             return true;
         }
         catch (IOException)
-        {
-            return false;
-        }
-        catch (UnauthorizedAccessException)
         {
             return false;
         }
@@ -42,64 +52,23 @@ public class GameStateStorage
         }
 
         string json = File.ReadAllText(_filePath);
-        GameSaveData? saveData = JsonSerializer.Deserialize<GameSaveData>(json, CreateJsonOptions());
+        GameSaveData? data = JsonSerializer.Deserialize<GameSaveData>(json, _jsonOptions);
 
-        ValidateSaveData(saveData);
-        return saveData;
+        Validate(data);
+        return data;
     }
 
-    private GameSaveData CreateSaveData(GameBoard board, int generation)
+    private static void Validate(GameSaveData? data)
     {
-        return new GameSaveData
+        if (data is null ||
+            data.Rows <= 0 ||
+            data.Columns <= 0 ||
+            data.Generation < 0 ||
+            data.Cells is null ||
+            data.Cells.GetLength(0) != data.Rows ||
+            data.Cells.GetLength(1) != data.Columns)
         {
-            Rows = board.Rows,
-            Columns = board.Columns,
-            Generation = generation,
-            Cells = CopyBoardCells(board)
-        };
-    }
-
-    private bool[,] CopyBoardCells(GameBoard board)
-    {
-        bool[,] cells = new bool[board.Rows, board.Columns];
-
-        for (int row = 0; row < board.Rows; row++)
-        {
-            for (int column = 0; column < board.Columns; column++)
-            {
-                cells[row, column] = _boardService.IsAlive(board, row, column);
-            }
-        }
-
-        return cells;
-    }
-
-    private static JsonSerializerOptions CreateJsonOptions()
-    {
-        JsonSerializerOptions options = new()
-        {
-            WriteIndented = true
-        };
-
-        options.Converters.Add(new JsonConverter());
-        return options;
-    }
-
-    private void ValidateSaveData(GameSaveData? data)
-    {
-        if (data is null)
-        {
-            throw new InvalidDataException(GameTexts.InvalidSavedGameData);
-        }
-
-        if (data.Rows <= 0 || data.Columns <= 0 || data.Generation < 0)
-        {
-            throw new InvalidDataException(GameTexts.InvalidSavedGameDimensions);
-        }
-
-        if (data.Cells is null || data.Cells.GetLength(0) != data.Rows || data.Cells.GetLength(1) != data.Columns)
-        {
-            throw new InvalidDataException(GameTexts.InvalidSavedGameCells);
+            throw new InvalidDataException(GameTexts.InvalidSavedGame);
         }
     }
 }

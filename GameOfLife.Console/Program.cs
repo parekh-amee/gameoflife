@@ -3,20 +3,17 @@ using GameOfLife.ConsoleApp.Controllers;
 using GameOfLife.ConsoleApp.Services;
 using GameOfLife.ConsoleApp.Views;
 
+// Composition root: create and connect the application objects here.
 GameSettings settings = new();
-
 GameBoardService boardService = new();
-
-ConsoleView view = new(boardService);
-
-GameBoardFactory boardFactory = new(settings,boardService);
-
+GameBoardFactory boardFactory = new(settings);
 GameEngine engine = new();
 
-GameSimulationService simulationService = new(engine,boardService,boardFactory);
+GameSimulationService simulation = new(engine, boardService, boardFactory);
 
-GameStateStorage storage = new(boardService);
+ConsoleView view = new(boardService);
+GameStateStorage storage = new();
 
-GameController controller = new(settings,view,boardFactory,simulationService,storage);
+GameController controller = new(settings, view, boardFactory, simulation, storage);
 
 controller.Run();

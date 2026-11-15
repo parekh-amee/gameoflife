@@ -3,17 +3,16 @@ using GameOfLife.ConsoleApp.Models;
 
 namespace GameOfLife.ConsoleApp.Services;
 
+// create new, empty, random or restored board data.
 public class GameBoardFactory
 {
     private readonly GameSettings _settings;
     private readonly Random _random;
-    private readonly GameBoardService _boardService;
 
-    public GameBoardFactory(GameSettings settings,GameBoardService boardService,Random? random = null)
+    public GameBoardFactory(GameSettings settings, Random? random = null)
     {
         _settings = settings;
         _random = random ?? Random.Shared;
-        _boardService = boardService;
 
         if (_settings.InitialAlivePercentage is < 0 or > 100)
         {
@@ -23,24 +22,17 @@ public class GameBoardFactory
 
     public GameBoard CreateEmptyBoard(int rows, int columns)
     {
-        return new GameBoard(rows, columns);
-    }
-
-    public GameBoard CreateBoard(bool[,] cells)
-    {
-        int rows = cells.GetLength(0);
-        int columns = cells.GetLength(1);
-        GameBoard board = CreateEmptyBoard(rows, columns);
-
-        for (int row = 0; row < rows; row++)
+        if (rows <= 0 || columns <= 0)
         {
-            for (int column = 0; column < columns; column++)
-            {
-                _boardService.SetCell(board, row, column, cells[row, column]);
-            }
+            throw new ArgumentOutOfRangeException(nameof(rows), GameTexts.InvalidBoardDimensions);
         }
 
-        return board;
+        return new GameBoard
+        {
+            Rows = rows,
+            Columns = columns,
+            Cells = new bool[rows, columns]
+        };
     }
 
     public GameBoard CreateRandomBoard(int rows, int columns)
@@ -51,11 +43,30 @@ public class GameBoardFactory
         {
             for (int column = 0; column < columns; column++)
             {
-                bool isAlive =_random.Next(100) < _settings.InitialAlivePercentage;
-                _boardService.SetCell(board, row, column, isAlive);
+                board.Cells[row, column] = _random.Next(100) < _settings.InitialAlivePercentage;
             }
         }
 
         return board;
+    }
+
+    public GameBoard CreateBoard(bool[,] cells)
+    {
+        ArgumentNullException.ThrowIfNull(cells);
+
+        int rows = cells.GetLength(0);
+        int columns = cells.GetLength(1);
+
+        if (rows == 0 || columns == 0)
+        {
+            throw new ArgumentException(GameTexts.InvalidBoardDimensions, nameof(cells));
+        }
+
+        return new GameBoard
+        {
+            Rows = rows,
+            Columns = columns,
+            Cells = (bool[,])cells.Clone()
+        };
     }
 }
