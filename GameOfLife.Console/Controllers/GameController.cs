@@ -1,11 +1,13 @@
 ﻿using GameOfLife.ConsoleApp.Configuration;
-using GameOfLife.ConsoleApp.Models;
-using GameOfLife.ConsoleApp.Services;
 using GameOfLife.ConsoleApp.Views;
+using GameOfLife.Core.Constants;
+using GameOfLife.Core.Models;
+using GameOfLife.Core.Services;
+using GameOfLife.Infrastructure;
 
 namespace GameOfLife.ConsoleApp.Controllers;
 
-// mvc controller: coordinates user actions, application services and the view.
+// Coordinates user actions, game services and the console view.
 public class GameController
 {
     private readonly GameSettings _settings;
@@ -14,11 +16,7 @@ public class GameController
     private readonly GameSimulationService _simulation;
     private readonly GameStateStorage _storage;
 
-    public GameController(GameSettings settings,
-        ConsoleView view,
-        GameBoardFactory boardFactory,
-        GameSimulationService simulation,
-        GameStateStorage storage)
+    public GameController(GameSettings settings, ConsoleView view, GameBoardFactory boardFactory, GameSimulationService simulation, GameStateStorage storage)
     {
         _settings = settings;
         _view = view;
@@ -51,7 +49,7 @@ public class GameController
                 {
                     break;
                 }
-                
+
                 board = _simulation.CreateNextGeneration(board);
                 generation++;
             }
@@ -75,6 +73,7 @@ public class GameController
         }
 
         (int rows, int columns) = SelectBoardDimensions();
+
         generation = 0;
 
         return rows > 0 && columns > 0 ? _boardFactory.CreateRandomBoard(rows, columns) : null;
@@ -85,6 +84,7 @@ public class GameController
         while (true)
         {
             _view.DisplayMenu(_settings);
+
             string? choice = _view.ReadMenuChoice()?.Trim();
 
             switch (choice)
@@ -93,24 +93,24 @@ public class GameController
                     return (_settings.SmallBoardSize, _settings.SmallBoardSize);
 
                 case GameTexts.MediumChoice:
-                    return (_settings.MediumBoardSize, _settings.MediumBoardSize);
+                    return (_settings.MediumBoardSize,_settings.MediumBoardSize);
 
                 case GameTexts.LargeChoice:
                     return (_settings.LargeBoardSize, _settings.LargeBoardSize);
 
-                case GameTexts.CustomChoice:
-                    int rows = _view.ReadDimension(GameTexts.EnterRows, _settings);
+                case GameTexts.CustomChoice: int rows = _view.ReadDimension(GameTexts.EnterRows,_settings);
+
                     int columns = _view.ReadDimension(GameTexts.EnterColumns, _settings);
+
                     return (rows, columns);
 
-                default:
-                    _view.DisplayMessage(GameTexts.InvalidChoice);
+                default: _view.DisplayMessage(GameTexts.InvalidChoice);
                     break;
             }
         }
     }
 
-    private bool ProcessAvailableInput(GameBoard board, int generation)
+    private bool ProcessAvailableInput(GameBoard board,int generation)
     {
         while (_view.HasKeyAvailable())
         {
@@ -159,9 +159,6 @@ public class GameController
         }
     }
 
-   
-
-    // The one save method is shared by normal play and paused play.
     private void SaveGame(GameBoard board, int generation)
     {
         bool saved = _storage.Save(board, generation);

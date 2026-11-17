@@ -1,4 +1,4 @@
-﻿namespace GameOfLife.ConsoleApp.Models;
+﻿namespace GameOfLife.Core.Models;
 
 // mvc model used by persistence. It contains properties only.
 public class GameSaveData

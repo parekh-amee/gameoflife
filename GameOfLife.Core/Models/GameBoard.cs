@@ -1,4 +1,4 @@
-﻿namespace GameOfLife.ConsoleApp.Models;
+﻿namespace GameOfLife.Core.Models;
 
 // mvc model: data only. No constructors, methods, validation or game logic.
 public class GameBoard

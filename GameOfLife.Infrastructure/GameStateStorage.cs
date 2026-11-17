@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
-using GameOfLife.ConsoleApp.Configuration;
-using GameOfLife.ConsoleApp.Models;
+using GameOfLife.Core.Constants;
+using GameOfLife.Core.Models;
 
-namespace GameOfLife.ConsoleApp.Services;
+namespace GameOfLife.Infrastructure;
 
-// Responsible only for reading and writing saved game data.
+// Responsible for saving and loading game state.
 public class GameStateStorage
 {
     private readonly string _filePath;
@@ -12,9 +12,7 @@ public class GameStateStorage
 
     public GameStateStorage(string? filePath = null)
     {
-        _filePath = filePath ?? Path.Combine(
-            AppContext.BaseDirectory,
-            GameTexts.SaveFileName);
+        _filePath = filePath ?? Path.Combine( AppContext.BaseDirectory, GameTexts.SaveFileName);
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -35,7 +33,9 @@ public class GameStateStorage
         try
         {
             string json = JsonSerializer.Serialize(data, _jsonOptions);
+
             File.WriteAllText(_filePath, json);
+
             return true;
         }
         catch (IOException)
@@ -53,8 +53,7 @@ public class GameStateStorage
 
         string json = File.ReadAllText(_filePath);
 
-        GameSaveData? data =
-            JsonSerializer.Deserialize<GameSaveData>(json, _jsonOptions);
+        GameSaveData? data = JsonSerializer.Deserialize<GameSaveData>(json, _jsonOptions);
 
         Validate(data);
 
@@ -68,13 +67,13 @@ public class GameStateStorage
 
         bool[][] result = new bool[rows][];
 
-        for (int i = 0; i < rows; i++)
+        for (int row = 0; row < rows; row++)
         {
-            result[i] = new bool[columns];
+            result[row] = new bool[columns];
 
-            for (int j = 0; j < columns; j++)
+            for (int column = 0; column < columns; column++)
             {
-                result[i][j] = board[i, j];
+                result[row][column] = board[row, column];
             }
         }
 
@@ -83,12 +82,7 @@ public class GameStateStorage
 
     private static void Validate(GameSaveData? data)
     {
-        if (data is null ||
-            data.Rows <= 0 ||
-            data.Columns <= 0 ||
-            data.Generation < 0 ||
-            data.Cells is null ||
-            data.Cells.Length != data.Rows)
+        if (data is null || data.Rows <= 0 ||  data.Columns <= 0 || data.Generation < 0 || data.Cells is null || data.Cells.Length != data.Rows)
         {
             throw new InvalidDataException(GameTexts.InvalidSavedGame);
         }
