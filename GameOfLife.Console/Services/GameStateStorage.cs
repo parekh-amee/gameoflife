@@ -12,14 +12,14 @@ public class GameStateStorage
 
     public GameStateStorage(string? filePath = null)
     {
-        _filePath = filePath ?? Path.Combine(AppContext.BaseDirectory, GameTexts.SaveFileName);
+        _filePath = filePath ?? Path.Combine(
+            AppContext.BaseDirectory,
+            GameTexts.SaveFileName);
 
         _jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true
         };
-
-        _jsonOptions.Converters.Add(new JsonConverter());
     }
 
     public bool Save(GameBoard board, int generation)
@@ -29,7 +29,7 @@ public class GameStateStorage
             Rows = board.Rows,
             Columns = board.Columns,
             Generation = generation,
-            Cells = (bool[,])board.Cells.Clone()
+            Cells = ConvertToJaggedArray(board.Cells)
         };
 
         try
@@ -52,10 +52,33 @@ public class GameStateStorage
         }
 
         string json = File.ReadAllText(_filePath);
-        GameSaveData? data = JsonSerializer.Deserialize<GameSaveData>(json, _jsonOptions);
+
+        GameSaveData? data =
+            JsonSerializer.Deserialize<GameSaveData>(json, _jsonOptions);
 
         Validate(data);
+
         return data;
+    }
+
+    private static bool[][] ConvertToJaggedArray(bool[,] board)
+    {
+        int rows = board.GetLength(0);
+        int columns = board.GetLength(1);
+
+        bool[][] result = new bool[rows][];
+
+        for (int i = 0; i < rows; i++)
+        {
+            result[i] = new bool[columns];
+
+            for (int j = 0; j < columns; j++)
+            {
+                result[i][j] = board[i, j];
+            }
+        }
+
+        return result;
     }
 
     private static void Validate(GameSaveData? data)
@@ -65,10 +88,18 @@ public class GameStateStorage
             data.Columns <= 0 ||
             data.Generation < 0 ||
             data.Cells is null ||
-            data.Cells.GetLength(0) != data.Rows ||
-            data.Cells.GetLength(1) != data.Columns)
+            data.Cells.Length != data.Rows)
         {
             throw new InvalidDataException(GameTexts.InvalidSavedGame);
+        }
+
+        foreach (bool[]? row in data.Cells)
+        {
+            if (row is null || row.Length != data.Columns)
+            {
+                throw new InvalidDataException(
+                    GameTexts.InvalidSavedGameCells);
+            }
         }
     }
 }

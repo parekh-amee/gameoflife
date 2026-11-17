@@ -2,7 +2,7 @@
 namespace GameOfLife.ConsoleApp.Configuration;
 
 // all text shown to the user, including validation and status messages.
-public static class GameTexts
+public class GameTexts
 {
     public const string Title = "-- Conway's Game of Life --";
     public const string SaveFileName = "game-state.json";
