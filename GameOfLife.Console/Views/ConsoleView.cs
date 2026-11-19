@@ -5,7 +5,8 @@ using GameOfLife.ConsoleApp.Services;
 
 namespace GameOfLife.ConsoleApp.Views;
 
-public sealed class ConsoleView
+// MVC view: all console input and output stays in this class.
+public class ConsoleView
 {
     private readonly GameBoardService _boardService;
 
@@ -16,35 +17,25 @@ public sealed class ConsoleView
 
     public void DisplayMenu(GameSettings settings)
     {
-        StringBuilder menu = new();
+        StringBuilder text = new();
 
-        menu.AppendLine(GameTexts.Title);
-        menu.AppendLine();
-        menu.AppendLine(GameTexts.SelectBoardSize);
+        text.AppendLine(GameTexts.Title);
+        text.AppendLine(GameTexts.SelectBoardSize);
+        text.AppendLine(string.Format(GameTexts.SmallBoardFormat, GameTexts.SmallChoice, settings.SmallBoardSize));
+        text.AppendLine(string.Format(GameTexts.MediumBoardFormat, GameTexts.MediumChoice, settings.MediumBoardSize));
+        text.AppendLine(string.Format(GameTexts.LargeBoardFormat, GameTexts.LargeChoice, settings.LargeBoardSize));
+        text.AppendLine(string.Format(GameTexts.CustomBoardFormat, GameTexts.CustomChoice));
 
-        menu.AppendLine(string.Format(
-            GameTexts.SmallBoardFormat,
-            GameTexts.SmallBoardChoice,
-            settings.SmallBoardSize));
-
-        menu.AppendLine(string.Format(
-            GameTexts.MediumBoardFormat,
-            GameTexts.MediumBoardChoice,
-            settings.MediumBoardSize));
-
-        menu.AppendLine(string.Format(
-            GameTexts.LargeBoardFormat,
-            GameTexts.LargeBoardChoice,
-            settings.LargeBoardSize));
-
-        menu.AppendLine(string.Format(
-            GameTexts.CustomBoard,
-            GameTexts.CustomBoardChoice));
-
-        Console.Write(menu.ToString());
+        Console.WriteLine(text);
     }
 
     public string? ReadMenuChoice() => Console.ReadLine();
+
+    public bool ConfirmRestore()
+    {
+        Console.Write(GameTexts.RestorePrompt);
+        return string.Equals(Console.ReadLine()?.Trim(), GameTexts.Yes, StringComparison.OrdinalIgnoreCase);
+    }
 
     public int ReadDimension(string prompt, GameSettings settings)
     {
@@ -52,51 +43,62 @@ public sealed class ConsoleView
         {
             Console.WriteLine(prompt);
 
-            string? input = Console.ReadLine();
-
-            if (int.TryParse(input, out int value) &&
-                value >= settings.MinimumBoardSize &&
+            if (int.TryParse(Console.ReadLine(), out int value) && value >= settings.MinimumBoardSize && 
                 value <= settings.MaximumBoardSize)
             {
                 return value;
             }
 
             DisplayMessage(GameTexts.InvalidSize);
-
-            DisplayMessage(string.Format(
-                GameTexts.BoardSizeRangeFormat,
-                settings.MinimumBoardSize,
-                settings.MaximumBoardSize));
+            DisplayMessage(string.Format(GameTexts.SizeRangeFormat,settings.MinimumBoardSize, settings.MaximumBoardSize));
         }
     }
 
-    public void DisplayBoard(GameBoard board, int generation)
+    public void DisplayBoard(
+        GameBoard board, int generation, GameSettings settings)
     {
         StringBuilder frame = new();
 
         frame.AppendLine(GameTexts.Title);
-        frame.AppendLine(
-            $"{GameTexts.GenerationPrefix}{generation}");
+        frame.AppendLine(string.Format(GameTexts.GenerationFormat, generation));
+        frame.AppendLine(string.Format(GameTexts.LiveCellsFormat, _boardService.CountLiveCells(board)));
+        frame.AppendLine();
 
         for (int row = 0; row < board.Rows; row++)
         {
             for (int column = 0; column < board.Columns; column++)
             {
-                frame.Append(
-                    _boardService.IsAlive(board, row, column)
-                        ? GameTexts.AliveCell
-                        : GameTexts.DeadCell);
+                frame.Append(board.Cells[row, column] ? GameTexts.AliveCell : GameTexts.DeadCell);
             }
 
             frame.AppendLine();
         }
 
-        frame.AppendLine(GameTexts.AliveLegend);
-        frame.AppendLine(GameTexts.QuitPrompt);
+        frame.AppendLine(GameTexts.Legend);
+        frame.AppendLine(string.Format(GameTexts.PausePromptFormat, settings.PauseKey));
+        frame.AppendLine(string.Format(GameTexts.SavePromptFormat, settings.SaveKey));
+        frame.AppendLine(string.Format(GameTexts.QuitPromptFormat, settings.QuitKey));
 
-        Console.Write(frame.ToString());
+        Console.Write(frame);
     }
 
-    public void DisplayMessage(string message) =>
-        Console.WriteLine(message);
+    public void DisplayPaused(GameSettings settings)
+    {
+        DisplayMessage(string.Format(GameTexts.PausedFormat, settings.PauseKey, settings.SaveKey, settings.QuitKey));
+    }
+
+    public void DisplayMessage(string message) => Console.WriteLine(message);
+
+    // These methods keep direct console access out of the controller.
+    public bool HasKeyAvailable() => Console.KeyAvailable;
+
+    public ConsoleKey ReadKey() => Console.ReadKey(intercept: true).Key;
+
+    public void ClearScreen()
+    {
+        Console.Clear();
+        Console.SetCursorPosition(0, 0);
+    }
+
+    public void SetCursorVisible(bool visible) => Console.CursorVisible = visible;
 }

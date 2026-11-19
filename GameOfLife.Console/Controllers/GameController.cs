@@ -1,118 +1,171 @@
 ﻿using GameOfLife.ConsoleApp.Configuration;
+using GameOfLife.ConsoleApp.Models;
 using GameOfLife.ConsoleApp.Services;
 using GameOfLife.ConsoleApp.Views;
 
 namespace GameOfLife.ConsoleApp.Controllers;
 
-public sealed class GameController
+// mvc controller: coordinates user actions, application services and the view.
+public class GameController
 {
     private readonly GameSettings _settings;
     private readonly ConsoleView _view;
     private readonly GameBoardFactory _boardFactory;
-    private readonly GameEngine _engine;
+    private readonly GameSimulationService _simulation;
+    private readonly GameStateStorage _storage;
 
-    public GameController(
-        GameSettings settings,
+    public GameController(GameSettings settings,
         ConsoleView view,
         GameBoardFactory boardFactory,
-        GameEngine engine)
+        GameSimulationService simulation,
+        GameStateStorage storage)
     {
         _settings = settings;
         _view = view;
         _boardFactory = boardFactory;
-        _engine = engine;
+        _simulation = simulation;
+        _storage = storage;
     }
 
     public void Run()
     {
-        (int Rows, int Columns) dimensions = SelectBoardDimensions();
+        GameBoard? board = StartGame(out int generation);
 
-        if (dimensions.Rows <= 0 || dimensions.Columns <= 0)
+        if (board is null)
+        {
             return;
+        }
 
-        var board = _boardFactory.CreateRandomBoard(
-            dimensions.Rows,
-            dimensions.Columns);
-
-        int generation = 0;
+        _view.SetCursorVisible(false);
 
         try
         {
-            Console.CursorVisible = false;
-
             while (true)
             {
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-
-                _view.DisplayBoard(board, generation);
-
-                if (IsQuitRequested())
-                    break;
+                _view.ClearScreen();
+                _view.DisplayBoard(board, generation, _settings);
 
                 Thread.Sleep(_settings.UpdateIntervalMilliseconds);
 
-                board = _engine.NextGeneration(board);
+                if (ProcessAvailableInput(board, generation))
+                {
+                    break;
+                }
+                
+                board = _simulation.CreateNextGeneration(board);
                 generation++;
             }
         }
         finally
         {
-            Console.CursorVisible = true;
+            _view.SetCursorVisible(true);
         }
 
-        _view.DisplayMessage(GameTexts.QuitMessage);
+        _view.DisplayMessage(GameTexts.Stopped);
     }
 
-  
-
-    private bool IsQuitRequested()
+    private GameBoard? StartGame(out int generation)
     {
-        try
+        GameSaveData? savedGame = _storage.Load();
+
+        if (savedGame is not null && _view.ConfirmRestore())
         {
-            while (Console.KeyAvailable)
+            generation = savedGame.Generation;
+            return _boardFactory.CreateBoard(savedGame.Cells);
+        }
+
+        (int rows, int columns) = SelectBoardDimensions();
+        generation = 0;
+
+        return rows > 0 && columns > 0 ? _boardFactory.CreateRandomBoard(rows, columns) : null;
+    }
+
+    private (int Rows, int Columns) SelectBoardDimensions()
+    {
+        while (true)
+        {
+            _view.DisplayMenu(_settings);
+            string? choice = _view.ReadMenuChoice()?.Trim();
+
+            switch (choice)
             {
-                if (Console.ReadKey(intercept: true).Key == ConsoleKey.Q)
-                    return true;
+                case GameTexts.SmallChoice:
+                    return (_settings.SmallBoardSize, _settings.SmallBoardSize);
+
+                case GameTexts.MediumChoice:
+                    return (_settings.MediumBoardSize, _settings.MediumBoardSize);
+
+                case GameTexts.LargeChoice:
+                    return (_settings.LargeBoardSize, _settings.LargeBoardSize);
+
+                case GameTexts.CustomChoice:
+                    int rows = _view.ReadDimension(GameTexts.EnterRows, _settings);
+                    int columns = _view.ReadDimension(GameTexts.EnterColumns, _settings);
+                    return (rows, columns);
+
+                default:
+                    _view.DisplayMessage(GameTexts.InvalidChoice);
+                    break;
             }
         }
-        catch (InvalidOperationException)
+    }
+
+    private bool ProcessAvailableInput(GameBoard board, int generation)
+    {
+        while (_view.HasKeyAvailable())
         {
-            return false;
+            ConsoleKey key = _view.ReadKey();
+
+            if (key == _settings.QuitKey)
+            {
+                return true;
+            }
+
+            if (key == _settings.SaveKey)
+            {
+                SaveGame(board, generation);
+            }
+            else if (key == _settings.PauseKey && PauseGame(board, generation))
+            {
+                return true;
+            }
         }
 
         return false;
     }
 
-    private (int Rows, int Columns) SelectBoardDimensions()
+    private bool PauseGame(GameBoard board, int generation)
     {
-        _view.DisplayMenu(_settings);
+        _view.DisplayPaused(_settings);
 
-        string? choice = _view.ReadMenuChoice()?.Trim().ToLowerInvariant();
-
-        switch (choice)
+        while (true)
         {
-            case GameTexts.SmallBoardChoice:
-                return (_settings.SmallBoardSize, _settings.SmallBoardSize);
+            ConsoleKey key = _view.ReadKey();
 
-            case GameTexts.MediumBoardChoice:
-                return (_settings.MediumBoardSize, _settings.MediumBoardSize);
+            if (key == _settings.PauseKey)
+            {
+                _view.DisplayMessage(GameTexts.Resumed);
+                return false;
+            }
 
-            case GameTexts.LargeBoardChoice:
-                return (_settings.LargeBoardSize, _settings.LargeBoardSize);
-
-            case GameTexts.CustomBoardChoice:
-                int rows = _view.ReadDimension(
-                    GameTexts.EnterRows, _settings);
-
-                int columns = _view.ReadDimension(
-                    GameTexts.EnterColumns, _settings);
-
-                return (rows, columns);
-
-            default:
-                _view.DisplayMessage(GameTexts.InvalidChoice);
-                return (0, 0);
+            if (key == _settings.SaveKey)
+            {
+                SaveGame(board, generation);
+            }
+            else if (key == _settings.QuitKey)
+            {
+                return true;
+            }
         }
+    }
+
+   
+
+    // The one save method is shared by normal play and paused play.
+    private void SaveGame(GameBoard board, int generation)
+    {
+        bool saved = _storage.Save(board, generation);
+
+        _view.DisplayMessage(saved ? GameTexts.SaveSuccess : GameTexts.SaveFailure);
     }
 }
