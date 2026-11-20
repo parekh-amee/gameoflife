@@ -1,34 +1,30 @@
-﻿using GameOfLife.ConsoleApp.Configuration;
-using GameOfLife.ConsoleApp.Models;
+﻿using GameOfLife.Core.Constants;
+using GameOfLife.Core.Models;
 
-namespace GameOfLife.ConsoleApp.Services;
+namespace GameOfLife.Core.Services;
 
-// create new, empty, random or restored board data.
+// Creates empty, random or restored game boards.
 public class GameBoardFactory
 {
-    private readonly GameSettings _settings;
+    private readonly int _initialAlivePercentage;
     private readonly Random _random;
 
-    public GameBoardFactory(GameSettings settings, Random? random = null)
+    public GameBoardFactory(int initialAlivePercentage, Random? random = null)
     {
-        _settings = settings;
-        _random = random ?? Random.Shared;
-
-        if (_settings.InitialAlivePercentage is < 0 or > 100)
+        if (initialAlivePercentage is < 0 or > 100)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(settings),
-                GameTexts.InvalidAlivePercentage);
+            throw new ArgumentOutOfRangeException(nameof(initialAlivePercentage),initialAlivePercentage, GameTexts.InvalidAlivePercentage);
         }
+
+        _initialAlivePercentage = initialAlivePercentage;
+        _random = random ?? Random.Shared;
     }
 
     public GameBoard CreateEmptyBoard(int rows, int columns)
     {
         if (rows <= 0 || columns <= 0)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(rows),
-                GameTexts.InvalidBoardDimensions);
+            throw new ArgumentOutOfRangeException(nameof(rows), rows, GameTexts.InvalidBoardDimensions);
         }
 
         return new GameBoard
@@ -47,8 +43,7 @@ public class GameBoardFactory
         {
             for (int column = 0; column < columns; column++)
             {
-                board.Cells[row, column] =
-                    _random.Next(100) < _settings.InitialAlivePercentage;
+                board.Cells[row, column] =_random.Next(100) < _initialAlivePercentage;
             }
         }
 
@@ -64,9 +59,7 @@ public class GameBoardFactory
 
         if (rows == 0 || columns == 0)
         {
-            throw new ArgumentException(
-                GameTexts.InvalidBoardDimensions,
-                nameof(cells));
+            throw new ArgumentException( GameTexts.InvalidBoardDimensions, nameof(cells));
         }
 
         return new GameBoard
@@ -85,9 +78,7 @@ public class GameBoardFactory
 
         if (rows == 0 || cells[0] is null || cells[0].Length == 0)
         {
-            throw new ArgumentException(
-                GameTexts.InvalidBoardDimensions,
-                nameof(cells));
+            throw new ArgumentException(GameTexts.InvalidBoardDimensions, nameof(cells));
         }
 
         int columns = cells[0].Length;
@@ -97,9 +88,7 @@ public class GameBoardFactory
         {
             if (cells[row] is null || cells[row].Length != columns)
             {
-                throw new ArgumentException(
-                    GameTexts.InvalidSavedGameCells,
-                    nameof(cells));
+                throw new ArgumentException( GameTexts.InvalidSavedGameCells, nameof(cells));
             }
 
             for (int column = 0; column < columns; column++)

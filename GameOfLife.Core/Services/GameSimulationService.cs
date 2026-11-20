@@ -1,6 +1,6 @@
-﻿using GameOfLife.ConsoleApp.Models;
+﻿using GameOfLife.Core.Models;
 
-namespace GameOfLife.ConsoleApp.Services;
+namespace GameOfLife.Core.Services;
 
 // Builds a complete next generation using board calculations and Conway's rules.
 public class GameSimulationService

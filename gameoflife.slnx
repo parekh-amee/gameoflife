@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="GameOfLife.Console/GameOfLife.Console.csproj" />
+  <Project Path="GameOfLife.Core/GameOfLife.Core.csproj" Id="87bf4a45-c655-445a-93ad-fa0ee1de5316" />
+  <Project Path="GameOfLife.Infrastructure/GameOfLife.Infrastructure.csproj" Id="c21f3dd6-01e5-4dfa-adfe-efb4398bb790" />
+  <Project Path="GameOfLife.Tests/GameOfLife.Tests.csproj" Id="b73fe893-ebe4-4002-a3d1-0e59b0b5ec64" />
 </Solution>

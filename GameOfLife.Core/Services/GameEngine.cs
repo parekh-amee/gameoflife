@@ -1,4 +1,4 @@
-﻿namespace GameOfLife.ConsoleApp.Services;
+﻿namespace GameOfLife.Core.Services;
 
 // contains the conway rules for one cell only.
 public class GameEngine
