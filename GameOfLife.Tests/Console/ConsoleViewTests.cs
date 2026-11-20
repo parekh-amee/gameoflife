@@ -96,6 +96,7 @@ public class ConsoleViewTests
         bool result = view.ConfirmRestore();
 
         // Assert
+       
         Assert.That(result, Is.True);
         Assert.That(_output.ToString(), Is.EqualTo(GameTexts.RestorePrompt));
     }
